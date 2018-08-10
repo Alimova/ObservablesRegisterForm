@@ -6,7 +6,7 @@
       (blur)="onBlurMethod($event.target)"
       placeholder="EMail">
     <label
-      *ngIf="validators.email.hasValue&&!validators.email.valid"
+      *ngIf="form.email.value&&!form.email.valid"
       class="col-sm-2 control-label">
         wrong mail format
     </label>
@@ -18,7 +18,7 @@
       (blur)="onBlurMethod($event.target)"
       placeholder="Password (***)">
     <label
-      *ngIf="validators.password.hasValue&&!validators.password.valid"
+      *ngIf="form.password.value&&!form.password.valid"
       class="col-sm-2 control-label">
         too short password
     </label>
@@ -30,12 +30,17 @@
       (blur)="onBlurMethod($event.target)"
       placeholder="Repeat Password (***)">
     <label
-      *ngIf="validators.confirmation.hasValue&&!validators.confirmation.valid"
+      *ngIf="form.confirmation.value&&!form.confirmation.valid"
       class="col-sm-2 control-label">
         passwords do not match
     </label>
   </div>
   <div class="offset-sm-2 col-sm-10">
-    <button [disabled]="" (click)="login()" type="submit">Register</button>
+    <button
+      [disabled]="!form.email.valid||!form.password.valid||!form.confirmation.valid"
+      (click)="register()"
+      type="submit">
+        Register
+    </button>
   </div>
 </div>

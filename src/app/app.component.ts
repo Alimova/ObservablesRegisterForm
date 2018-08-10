@@ -12,34 +12,39 @@ import { Subject } from 'rxjs/Subject';
 
 export class AppComponent {
   public valid = new Subject<string>();
-  public validators = {
-    email:{
+  private form = {
+    email: {
+      value: '',
       hasValue: false,
       valid: false,
-      validate(value): boolean {
-        return true
+      validate(val): boolean {
+        return !!val.email.value.match('^[\\w\\.]+@[a-zA-Z_]+?\\.[a-zA-Z]{2,3}$')
       }
     },
     password: {
+      value: '',
       hasValue: false,
       valid: false,
-      validate(value): boolean {
-        if (value.length > 3) { return true } else { return false }
+      validate(val): boolean {
+        return val.password.value.length > 3
       }
     },
     confirmation: {
+      value: '',
       hasValue: false,
       valid: false,
-      validate(value): boolean {
-        return true
-      },
+      validate(val): boolean {
+        return val.password.value == val.confirmation.value
+      }
     }
   }
 
   onBlurMethod(target) {
-    console.log(`id: ${target.id}, val: ${target.value}`);
-    this.validators[target.id].hasValue = target.value ? true : false;
-    this.validators[target.id].valid = this.validators[target.id].validate(target.value) ? true : false;
+    let val = this.form[target.id]
+    val.value = target.value;
+    val.valid = val.validate(this.form) ? true : false;
   }
+
+  register() {}
 
 }

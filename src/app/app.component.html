@@ -1,0 +1,41 @@
+<div class="container">
+  <div class="col-sm-10">
+    <input
+      type="email"
+      id="email"
+      (blur)="onBlurMethod($event.target)"
+      placeholder="EMail">
+    <label
+      *ngIf="validators.email.hasValue&&!validators.email.valid"
+      class="col-sm-2 control-label">
+        wrong mail format
+    </label>
+  </div>
+  <div class="col-sm-10">
+    <input
+      type="password"
+      id="password"
+      (blur)="onBlurMethod($event.target)"
+      placeholder="Password (***)">
+    <label
+      *ngIf="validators.password.hasValue&&!validators.password.valid"
+      class="col-sm-2 control-label">
+        too short password
+    </label>
+  </div>
+  <div class="col-sm-10">
+    <input
+      type="password"
+      id="confirmation"
+      (blur)="onBlurMethod($event.target)"
+      placeholder="Repeat Password (***)">
+    <label
+      *ngIf="validators.confirmation.hasValue&&!validators.confirmation.valid"
+      class="col-sm-2 control-label">
+        passwords do not match
+    </label>
+  </div>
+  <div class="offset-sm-2 col-sm-10">
+    <button [disabled]="" (click)="login()" type="submit">Register</button>
+  </div>
+</div>

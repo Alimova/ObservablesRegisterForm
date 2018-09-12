@@ -1,12 +1,6 @@
-import { Component, OnInit, AfterViewInit, ElementRef, Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/reduce';
+import { Component, OnInit, AfterViewInit, Injectable, ElementRef, ViewChild } from '@angular/core';
+import { Observable, fromEvent, combineLatest } from 'rxjs';
+import { map, debounceTime, filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -16,69 +10,115 @@ import 'rxjs/add/operator/reduce';
 
 @Injectable()
 
-export class AppComponent {
-  public formValid = false;
+export class AppComponent  {
   public formControls = [];
-  displayMessage = [];
-  subject = new Subject();
-
-  private form = {
-    email: {
-      value: '',
-      valid: false,
-      errorMessage: 'wrong mail format',
-      validate(val): boolean {
-        return val.email.value.match('^[\\w\\.]+@[a-zA-Z_]+?\\.[a-zA-Z]{2,3}$');
+  displayMessage = '';
+  private credentials = {
+    email: '',
+    password: '',
+  }
+  formValid: boolean = false;
+  @ViewChild('email') email: ElementRef<HTMLInputElement>;
+  @ViewChild('password') password: ElementRef<HTMLInputElement>;
+  @ViewChild('confirmation') confirmation: ElementRef<HTMLInputElement>;
+  private errors = {
+    email: [
+      {
+        type: 'pattern',
+        message: 'wrong mail format',
+        // validate(email): boolean {
+        //   return email.match('^[\\w\\.]+@[a-zA-Z_]+?\\.[a-zA-Z]{2,3}$');
+        // }
+      },
+      {
+        type: 'required',
+        message: 'email is required'
       }
-    },
-    password: {
-      value: '',
-      valid: false,
-      errorMessage: 'too short password',
-      validate(val): boolean {
-        return val.password.value.length > 3;
+    ],
+    password: [
+      {
+        type: 'minlength',
+        message: 'too short password',
+        // validate(pass): boolean {
+        //   return pass.length > 3;
+        // }
+      },
+      {
+        type: 'required',
+        message: 'password is required'
       }
-    },
-    confirmation: {
-      value: '',
-      valid: false,
-      errorMessage: 'passwords do not match',
-      validate(val): boolean {
-        return val.password.value === val.confirmation.value;
-      }
-    }
+    ],
+    confirmation: [{
+      type: '',
+      message: 'passwords do not match',
+      // validate(pass, confirm): boolean {
+      //   return pass === confirm;
+      // }
+    }]
   };
 
   ngOnInit() {
-    this.formControls.push(document.querySelector('#email'));
-    this.formControls.push(document.querySelector('#password'));
-    this.formControls.push(document.querySelector('#confirmation'));
+    this.formControls.push(this.email.nativeElement);
+    this.formControls.push(this.password.nativeElement);
+    this.formControls.push(this.confirmation.nativeElement);
   }
 
   ngAfterViewInit() {
     const controlBlurs: Observable<any>[] = this.formControls
-      .map(formControl => Observable.fromEvent(formControl, 'blur'));
+      .map(formControl => fromEvent(formControl, 'mouseout'));
 
-    Observable.merge(...controlBlurs).debounceTime(1000).subscribe(event => {
-      const val = this.form[event.target.id];
-      val.value = event.target.value;
-      val.valid = val.validate(this.form) ? true : false;
-      if(!val.valid) {
-        this.displayMessage[event.target.id] = val.errorMessage;
-      } else {
-        delete this.displayMessage[event.target.id];
-      }
-      this.formValid = !!this.form.email.value && !!this.form.password.value && !!this.form.confirmation.value;
-    });
+    const email$ = controlBlurs[0].pipe(
+      debounceTime(100),
+      map((event) => event['target'].value)
+    );
+    const pass$ = controlBlurs[1].pipe(
+      debounceTime(100),
+      map(event => event['target'].value)
+    );
+    const confirm$ = controlBlurs[2].pipe(
+      debounceTime(100),
+      map(event => event['target'].value)
+    );
+
+    combineLatest(
+        email$,
+        pass$,
+        confirm$,
+    )
+      .pipe(map(([email, pass, confirm]) => ({email: email, pass: pass, confirm: confirm})))
+      .subscribe(res => {
+        this.displayMessage = '';
+         if (
+          !res.email.match('^[\\w\\.]+@[a-zA-Z_]+?\\.[a-zA-Z]{2,3}$')
+          && res.email.length
+        ) {
+          this.displayMessage = 'wrong mail format';
+        } else {
+          if (res.pass.length && res.pass.length < 4) {
+            this.displayMessage = 'too short password';
+           } else {
+            if (
+              res.pass !== res.confirm
+              && res.pass.length
+              && res.confirm.length
+            ) {
+             this.displayMessage = 'passwords do not match';
+            } else {
+              this.displayMessage = '';
+              this.formValid = true;
+              this.credentials = {email: res.email, password: res.pass};
+            }
+          }
+        }
+      });
   }
 
   register() {
-    const credentials = `email: ${this.form.email.value}, password: ${this.form.password.value}`;
-    alert(
-      this.form.email.valid && this.form.password.valid && this.form.confirmation.valid
-      ? `Registration complete ${credentials}`
-      : this.displayMessage['email'] || this.displayMessage['password'] || this.displayMessage['confirmation']
-    );
+    alert(`
+        Registration complete
+        email: ${this.credentials.email},
+        password: ${this.credentials.password}
+    `);
   }
 
 }

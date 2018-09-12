@@ -20,6 +20,11 @@
       placeholder="Repeat Password (***)"
       #confirmation>
   </div>
+  <div
+    class="error"
+    *ngIf="displayMessage">
+      {{displayMessage}}
+  </div>
   <div class="offset-sm-2 col-sm-10">
     <button
       [disabled]="!this.formValid"
